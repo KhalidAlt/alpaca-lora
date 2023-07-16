@@ -7,6 +7,7 @@ import torch
 import transformers
 from peft import PeftModel
 from transformers import GenerationConfig, LlamaForCausalLM, LlamaTokenizer
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from utils.callbacks import Iteratorize, Stream
 from utils.prompter import Prompter
@@ -37,9 +38,9 @@ def main(
     ), "Please specify a --base_model, e.g. --base_model='huggyllama/llama-7b'"
 
     prompter = Prompter(prompt_template)
-    tokenizer = LlamaTokenizer.from_pretrained(base_model)
+    tokenizer = AutoTokenizer.from_pretrained(base_model)
     if device == "cuda":
-        model = LlamaForCausalLM.from_pretrained(
+        model = AutoModelForCausalLM.from_pretrained(
             base_model,
             load_in_8bit=load_8bit,
             torch_dtype=torch.float16,
@@ -51,7 +52,7 @@ def main(
             torch_dtype=torch.float16,
         )
     elif device == "mps":
-        model = LlamaForCausalLM.from_pretrained(
+        model = AutoModelForCausalLM.from_pretrained(
             base_model,
             device_map={"": device},
             torch_dtype=torch.float16,
@@ -63,7 +64,7 @@ def main(
             torch_dtype=torch.float16,
         )
     else:
-        model = LlamaForCausalLM.from_pretrained(
+        model = AutoModelForCausalLM.from_pretrained(
             base_model, device_map={"": device}, low_cpu_mem_usage=True
         )
         model = PeftModel.from_pretrained(
@@ -198,15 +199,14 @@ def main(
     """
     # testing code for readme
     for instruction in [
-        "Tell me about alpacas.",
-        "Tell me about the president of Mexico in 2019.",
-        "Tell me about the king of France in 2019.",
-        "List all Canadian provinces in alphabetical order.",
-        "Write a Python program that prints the first 10 Fibonacci numbers.",
-        "Write a program that prints the numbers from 1 to 100. But for multiples of three print 'Fizz' instead of the number and for the multiples of five print 'Buzz'. For numbers which are multiples of both three and five print 'FizzBuzz'.",  # noqa: E501
-        "Tell me five words that rhyme with 'shock'.",
-        "Translate the sentence 'I have no mouth but I must scream' into Spanish.",
-        "Count up from 1 to 500.",
+        "أعطني معلومات عن السعودية.",
+        "أخبرني من هو رئيس الولايات المتحدة الحالي؟",
+        "رتب الحروف العربية حسب الترتيب الأبجدي.",
+        "اكتب كود بايثون يطبع الأرقام من 0 إلى 10",
+        "اكتب كود بايثون يطبع حاصل ضرب رقمين",
+        "ضع كلمة أقرأ في جملة",
+        "ترجم هذه الجملة إلى الإنجليزي: ذهب أحمد إلى السوق",
+        "عد من 1 إلى 100",
     ]:
         print("Instruction:", instruction)
         print("Response:", evaluate(instruction))
